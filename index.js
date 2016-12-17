@@ -30,6 +30,7 @@ var path = require('path')
 var statuses = require('statuses')
 var Stream = require('stream')
 var util = require('util')
+var SocketReadable = require('../../SocketReadable.js');
 
 /**
  * Path function references.
@@ -734,6 +735,7 @@ SendStream.prototype.sendIndex = function sendIndex (path) {
  * @api private
  */
 
+var shortid = require('shortid');
 SendStream.prototype.stream = function stream (path, options) {
   // TODO: this is all lame, refactor meeee
   var finished = false
@@ -741,21 +743,39 @@ SendStream.prototype.stream = function stream (path, options) {
   var res = this.res
 
   // pipe
-  var stream = fs.createReadStream(path, options)
-  this.emit('stream', stream)
-  stream.pipe(res)
+  if (this.options.socket) {
+    var id = shortid.generate();
+    options.sendCalls = ++sendCalls;
+    options.room = id;
+    this.options.socket.join(id);
+    var stream = new SocketReadable(this.options.socket, options);
+    console.log('has socket in options');
+    this.emit('stream', stream);
+    stream.pipe(res);
+  }
+  else {
+    console.log('no socket in opts');
+    var stream = fs.createReadStream(path, options)
+    this.emit('stream', stream)
+    stream.pipe(res)
+  }
 
   // response finished, done with the fd
   onFinished(res, function onfinished () {
+    console.log('stream on finished', stream.sendCalls);
     finished = true
+    // stream.unpipe();
     destroy(stream)
+    // res.end();
   })
 
   // error handling code-smell
   stream.on('error', function onerror (err) {
+    console.log('stream on error', stream.sendCalls, err);
     // request already finished
     if (finished) return
 
+    console.log('stream on error but not finished', stream.sendCalls, err);
     // clean up stream
     finished = true
     destroy(stream)
@@ -766,6 +786,7 @@ SendStream.prototype.stream = function stream (path, options) {
 
   // end
   stream.on('end', function onend () {
+    console.log('stream on end', stream.sendCalls);
     self.emit('end')
   })
 }
