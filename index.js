@@ -30,7 +30,7 @@ var path = require('path')
 var statuses = require('statuses')
 var Stream = require('stream')
 var util = require('util')
-var SocketReadable = require('../../SocketReadable.js');
+var SocketReadable = require('../socket-ffmpeg/SocketReadable.js');
 
 /**
  * Path function references.
@@ -745,7 +745,6 @@ SendStream.prototype.stream = function stream (path, options) {
   // pipe
   if (this.options.socket) {
     var id = shortid.generate();
-    options.sendCalls = ++sendCalls;
     options.room = id;
     this.options.socket.join(id);
     var stream = new SocketReadable(this.options.socket, options);
@@ -762,7 +761,7 @@ SendStream.prototype.stream = function stream (path, options) {
 
   // response finished, done with the fd
   onFinished(res, function onfinished () {
-    console.log('stream on finished', stream.sendCalls);
+    console.log('stream on finished', stream.room);
     finished = true
     // stream.unpipe();
     destroy(stream)
@@ -771,11 +770,11 @@ SendStream.prototype.stream = function stream (path, options) {
 
   // error handling code-smell
   stream.on('error', function onerror (err) {
-    console.log('stream on error', stream.sendCalls, err);
+    console.log('stream on error', stream.room, err);
     // request already finished
     if (finished) return
 
-    console.log('stream on error but not finished', stream.sendCalls, err);
+    console.log('stream on error but not finished', stream.room, err);
     // clean up stream
     finished = true
     destroy(stream)
@@ -786,7 +785,7 @@ SendStream.prototype.stream = function stream (path, options) {
 
   // end
   stream.on('end', function onend () {
-    console.log('stream on end', stream.sendCalls);
+    console.log('stream on end', stream.room);
     self.emit('end')
   })
 }
