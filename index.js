@@ -112,17 +112,21 @@ function SendStream (req, path, options) {
   this.path = path
   this.req = req
 
+  this.socket = typeof path === 'object'
+    ? path
+    : false;
+
   this._acceptRanges = opts.acceptRanges !== undefined
     ? Boolean(opts.acceptRanges)
     : true
 
   this._cacheControl = opts.cacheControl !== undefined
     ? Boolean(opts.cacheControl)
-    : true
+    : false
 
   this._etag = opts.etag !== undefined
     ? Boolean(opts.etag)
-    : true
+    : false
 
   this._dotfiles = opts.dotfiles !== undefined
     ? opts.dotfiles
@@ -153,7 +157,7 @@ function SendStream (req, path, options) {
 
   this._lastModified = opts.lastModified !== undefined
     ? Boolean(opts.lastModified)
-    : true
+    : false
 
   this._maxage = opts.maxAge || opts.maxage
   this._maxage = typeof this._maxage === 'string'
@@ -474,6 +478,13 @@ SendStream.prototype.pipe = function pipe (res) {
   // references
   this.res = res
 
+  console.log('in pipe');
+  if (this.socket) {
+    console.log('have socket');
+    this.sendSocket(this.socket);
+    return;
+  }
+
   // decode the path
   var path = decode(this.path)
   if (path === -1) {
@@ -580,7 +591,12 @@ SendStream.prototype.send = function send (path, stat) {
   this.setHeader(path, stat)
 
   // set content-type
-  this.type(path)
+  if (typeof path === 'object') {
+    this.type(stat.type);
+  }
+  else {
+    this.type(path)
+  }
 
   // conditional GET support
   if (this.isConditionalGET() && this.isCachable() && this.isFresh()) {
@@ -697,6 +713,14 @@ SendStream.prototype.sendFile = function sendFile (path) {
   }
 }
 
+SendStream.prototype.sendSocket = function (socket) {
+  socket.emit('stat');
+  socket.on('stat', (stat) => {
+    console.log('got stat', stat);
+    this.send(socket, stat);
+  });
+}
+
 /**
  * Transfer index for `path`.
  *
@@ -743,11 +767,11 @@ SendStream.prototype.stream = function stream (path, options) {
   var res = this.res
 
   // pipe
-  if (this.options.socket) {
+  if (typeof path === 'object') {
     var id = shortid.generate();
     options.room = id;
-    this.options.socket.join(id);
-    var stream = new SocketReadable(this.options.socket, options);
+    path.join(id);
+    var stream = new SocketReadable(path, options);
     console.log('has socket in options');
     this.emit('stream', stream);
     stream.pipe(res);
@@ -800,6 +824,12 @@ SendStream.prototype.stream = function stream (path, options) {
 
 SendStream.prototype.type = function type (path) {
   var res = this.res
+
+  if (this.socket) {
+    console.log(path);
+    res.setHeader('Content-Type', path);
+    return;
+  }
 
   if (res.getHeader('Content-Type')) return
 
