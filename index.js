@@ -478,9 +478,7 @@ SendStream.prototype.pipe = function pipe (res) {
   // references
   this.res = res
 
-  console.log('in pipe');
   if (this.socket) {
-    console.log('have socket');
     this.sendSocket(this.socket);
     return;
   }
@@ -716,7 +714,6 @@ SendStream.prototype.sendFile = function sendFile (path) {
 SendStream.prototype.sendSocket = function (socket) {
   socket.emit('getStat');
   socket.once('stat', (stat) => {
-    console.log('got stat', stat);
     this.send(socket, stat);
   });
 }
@@ -770,7 +767,6 @@ SendStream.prototype.stream = function stream (path, options) {
   if (typeof path === 'object') {
     var id = shortid.generate();
     options.room = id;
-    path.join(id);
     var stream = new SocketReadable(path, options);
     console.log('has socket in options');
     this.emit('stream', stream);
@@ -787,9 +783,7 @@ SendStream.prototype.stream = function stream (path, options) {
   onFinished(res, function onfinished () {
     console.log('stream on finished', stream.room);
     finished = true
-    // stream.unpipe();
     destroy(stream)
-    // res.end();
   })
 
   // error handling code-smell
