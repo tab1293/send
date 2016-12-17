@@ -591,7 +591,7 @@ SendStream.prototype.send = function send (path, stat) {
   this.setHeader(path, stat)
 
   // set content-type
-  if (typeof path === 'object') {
+  if (typeof path === 'object' && stat.type.length) {
     this.type(stat.type);
   }
   else {
@@ -714,8 +714,8 @@ SendStream.prototype.sendFile = function sendFile (path) {
 }
 
 SendStream.prototype.sendSocket = function (socket) {
-  socket.emit('stat');
-  socket.on('stat', (stat) => {
+  socket.emit('getStat');
+  socket.once('stat', (stat) => {
     console.log('got stat', stat);
     this.send(socket, stat);
   });
@@ -826,7 +826,6 @@ SendStream.prototype.type = function type (path) {
   var res = this.res
 
   if (this.socket) {
-    console.log(path);
     res.setHeader('Content-Type', path);
     return;
   }
