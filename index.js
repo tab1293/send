@@ -756,7 +756,6 @@ SendStream.prototype.sendIndex = function sendIndex (path) {
  * @api private
  */
 
-var shortid = require('shortid');
 SendStream.prototype.stream = function stream (path, options) {
   // TODO: this is all lame, refactor meeee
   var finished = false
@@ -765,8 +764,6 @@ SendStream.prototype.stream = function stream (path, options) {
 
   // pipe
   if (typeof path === 'object') {
-    var id = shortid.generate();
-    options.room = id;
     var stream = new SocketReadable(path, options);
     console.log('has socket in options');
     this.emit('stream', stream);
