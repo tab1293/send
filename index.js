@@ -30,7 +30,7 @@ var path = require('path')
 var statuses = require('statuses')
 var Stream = require('stream')
 var util = require('util')
-var SocketReadable = require('../socket-ffmpeg/SocketReadable.js');
+var SocketReadable = require('./SocketReadable.js');
 
 /**
  * Path function references.
