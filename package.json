@@ -42,7 +42,8 @@
     "HISTORY.md",
     "LICENSE",
     "README.md",
-    "index.js"
+    "index.js",
+    "SocketReadable.js"
   ],
   "engines": {
     "node": ">= 0.8.0"
