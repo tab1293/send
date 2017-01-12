@@ -1,5 +1,7 @@
 const Readable = require('stream').Readable;
 const shortid = require('shortid');
+const MIN_EXPONENT = 18
+const MAX_EXPONENT = 23;
 
 class SocketReadable extends Readable {
     constructor(socket, options = {}) {
@@ -8,6 +10,7 @@ class SocketReadable extends Readable {
         this.position = options.start ? options.start : 0;
         this.end = options.end;
         this.destroyed = false;
+        this.exponent = MIN_EXPONENT;
         this.room = shortid.generate();
 
         console.log('SocketReadable constructor', options.start, options.end);
@@ -21,8 +24,14 @@ class SocketReadable extends Readable {
             return;
         }
 
-        const toRead = Math.min(size, this.end - this.position);
+        if (this.exponent < MAX_EXPONENT) {
+            this.exponent++;
+        }
+
+        const minToRead = Math.pow(2, this.exponent);
+        const toRead = Math.min(minToRead, this.end - this.position);
         // console.log('toRead', toRead);
+        // const toRead = this.end - this.position;
         if (toRead <= 0) {
             this.push(null);
             return;
