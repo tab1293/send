@@ -116,13 +116,13 @@ function SendStream (req, path, options) {
     ? path
     : false;
 
-  this.torrentReadStream = (typeof path === 'object' && options.torrent)
+  this.torrentChild = (typeof path === 'object' && options.torrent)
     ? path
     : false;
 
   console.log('checking for trs');
-  if (this.torrentReadStream) {
-    console.log('this is a torrentReadStream');
+  if (this.torrentChild) {
+    console.log('this is a torrentChild');
     console.log(this.options);
   }
 
@@ -493,8 +493,8 @@ SendStream.prototype.pipe = function pipe (res) {
     return;
   }
 
-  if (this.torrentReadStream) {
-    this.send(this.torrentReadStream, this.options.stat)
+  if (this.torrentChild) {
+    this.send(this.torrentChild, this.options.stat)
     return;
   }
 
@@ -604,7 +604,7 @@ SendStream.prototype.send = function send (path, stat) {
   this.setHeader(path, stat)
 
   // set content-type
-  if ((this.socket || this.torrentReadStream) && stat.type.length) {
+  if ((this.socket || this.torrentChild) && stat.type.length) {
     this.type(stat.type);
   }
   else {
@@ -784,9 +784,10 @@ SendStream.prototype.stream = function stream (path, options) {
     this.emit('stream', stream);
     stream.pipe(res);
   }
-  else if (this.torrentReadStream) {
-    console.log('piping trs');
-    var stream = this.torrentReadStream;
+  else if (this.torrentChild) {
+    console.log('piping trs', options.start);
+    this.torrentChild.stdin.write(options.start)
+    var stream = this.torrentChild.stdout;
     this.emit('stream', stream);
     stream.pipe(res);
   }
