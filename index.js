@@ -786,7 +786,7 @@ SendStream.prototype.stream = function stream (path, options) {
   }
   else if (this.torrentReadStream) {
     console.log('piping trs');
-    this.emit('stream', torrentReadStream);
+    this.emit('stream', this.torrentReadStream);
     this.torrentReadStream.pipe(res);
   }
   else {
