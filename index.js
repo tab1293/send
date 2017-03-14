@@ -112,9 +112,19 @@ function SendStream (req, path, options) {
   this.path = path
   this.req = req
 
-  this.socket = typeof path === 'object'
+  this.socket = (typeof path === 'object' && options.socket)
     ? path
     : false;
+
+  this.torrentReadStream = (typeof path === 'object' && options.torrent)
+    ? path
+    : false;
+
+  console.log('checking for trs');
+  if (this.torrentReadStream) {
+    console.log('this is a torrentReadStream');
+    console.log(this.options);
+  }
 
   this._acceptRanges = opts.acceptRanges !== undefined
     ? Boolean(opts.acceptRanges)
@@ -483,6 +493,11 @@ SendStream.prototype.pipe = function pipe (res) {
     return;
   }
 
+  if (this.torrentReadStream) {
+    this.send(this.torrentReadStream, this.options.stat)
+    return;
+  }
+
   // decode the path
   var path = decode(this.path)
   if (path === -1) {
@@ -589,7 +604,7 @@ SendStream.prototype.send = function send (path, stat) {
   this.setHeader(path, stat)
 
   // set content-type
-  if (typeof path === 'object' && stat.type.length) {
+  if ((this.socket || this.torrentReadStream) && stat.type.length) {
     this.type(stat.type);
   }
   else {
@@ -763,11 +778,16 @@ SendStream.prototype.stream = function stream (path, options) {
   var res = this.res
 
   // pipe
-  if (typeof path === 'object') {
+  if (this.socket) {
     var stream = new SocketReadable(path, options);
     console.log('has socket in options');
     this.emit('stream', stream);
     stream.pipe(res);
+  }
+  else if (this.torrentReadStream) {
+    console.log('piping trs');
+    this.emit('stream', torrentReadStream);
+    torrentReadStream.pipe(res);
   }
   else {
     console.log('no socket in opts');
