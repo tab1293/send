@@ -786,7 +786,7 @@ SendStream.prototype.stream = function stream (path, options) {
   }
   else if (this.torrentChild) {
     console.log('piping trs', options.start);
-    this.torrentChild.stdin.write(options.start)
+    this.torrentChild.stdin.write(options.start.toString())
     var stream = this.torrentChild.stdout;
     this.emit('stream', stream);
     stream.pipe(res);
