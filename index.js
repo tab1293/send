@@ -786,8 +786,9 @@ SendStream.prototype.stream = function stream (path, options) {
   }
   else if (this.torrentReadStream) {
     console.log('piping trs');
-    this.emit('stream', this.torrentReadStream);
-    this.torrentReadStream.pipe(res);
+    var stream = this.torrentReadStream;
+    this.emit('stream', stream);
+    stream.pipe(res);
   }
   else {
     console.log('no socket in opts');
@@ -798,18 +799,18 @@ SendStream.prototype.stream = function stream (path, options) {
 
   // response finished, done with the fd
   onFinished(res, function onfinished () {
-    console.log('stream on finished', stream.room);
+    console.log('stream on finished');
     finished = true
     destroy(stream)
   })
 
   // error handling code-smell
   stream.on('error', function onerror (err) {
-    console.log('stream on error', stream.room, err);
+    console.log('stream on error', err);
     // request already finished
     if (finished) return
 
-    console.log('stream on error but not finished', stream.room, err);
+    console.log('stream on error but not finished', err);
     // clean up stream
     finished = true
     destroy(stream)
@@ -820,7 +821,7 @@ SendStream.prototype.stream = function stream (path, options) {
 
   // end
   stream.on('end', function onend () {
-    console.log('stream on end', stream.room);
+    console.log('stream on end');
     self.emit('end')
   })
 }
