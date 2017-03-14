@@ -787,7 +787,7 @@ SendStream.prototype.stream = function stream (path, options) {
   else if (this.torrentReadStream) {
     console.log('piping trs');
     this.emit('stream', torrentReadStream);
-    torrentReadStream.pipe(res);
+    this.torrentReadStream.pipe(res);
   }
   else {
     console.log('no socket in opts');
